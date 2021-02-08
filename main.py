@@ -82,35 +82,44 @@ def checkAccPanel(el, accIdNr):
 
         elemClass = elem.get('class', '')
 
-        if elem.tag == 'div' and elemClass == 'panel-heading':
-            panelId = elem.get('id', None)
-            if panelId is None:
-                print('Missing panel id in accordion ' + accIdNr)
-                return
-            cmpAccNr, panelIdNr, suffix = panelId.split('-')
-            if cmpAccNr != accIdNr:
-                print('Panel has wrong accordion number: ' + str(panelId))
-                return
-            if suffix != 'heading':
-                print('Panel has faulty id: ' + str(panelId))
-                return
-            # print('checking panel ' + panelId)
+        if action == 'start':
 
-        if elem.tag == 'div' and 'panel-collapse' in elemClass:
-            bodyId = elem.get('id', None)
-            if bodyId is None:
-                print('Missing body id in panel ' + panelId)
-                return
-            cmpAccNr, bodyIdNr, suffix = bodyId.split('-')
-            if bodyIdNr != panelIdNr:
-                print('Body has wrong panel number: ' + str(bodyId))
-                return
-            if cmpAccNr != accIdNr:
-                print('Body has wrong accordion number: ' + str(bodyId))
-                return
-            if suffix != 'body':
-                print('Body has faulty id: ' + str(bodyId))
-                return
+            # validate attributes of panel-heading
+            # (populates panlIdNr)
+            if elem.tag == 'div' and elemClass == 'panel-heading':
+                panelId = elem.get('id', None)
+                if panelId is None:
+                    print('Missing panel id in accordion ' + accIdNr)
+                    return
+                cmpAccNr, panelIdNr, suffix = panelId.split('-')
+                if cmpAccNr != accIdNr:
+                    print('Panel has wrong accordion number: ' + panelId)
+                    return
+                if suffix != 'heading':
+                    print('Panel has faulty id: ' + panelId)
+                    return
+
+            # validate attributes of accordion-toggle link
+            # (populates bodyIdNr)
+            if elem.tag == 'a' and 'accordion-toggle' in elemClass:
+                href = elem.get('href', None)
+                expected = '#{0}-{1}-body'.format(accIdNr, panelIdNr)
+                if href != expected:
+                    print('Faulty href in toggle link of panel ' + panelId)
+                    return
+                dataParent = elem.get('data-parent', None)
+                expected = '#{0}-accordion'.format(accIdNr)
+                if dataParent != expected:
+                    print('Faulty data-parent in toggle link of panel ' + panelId)
+                    return
+
+            # validate attributes of panel-collapse
+            if elem.tag == 'div' and 'panel-collapse' in elemClass:
+                bodyId = elem.get('id', None)
+                expected = '{0}-{1}-body'.format(accIdNr, panelIdNr)
+                if bodyId != expected:
+                    print('Faulty body id in panel ' + panelId)
+                    return
 
         if elem.tag == waitingFor['tag'] and \
            action == waitingFor['action']:
@@ -129,10 +138,9 @@ def checkAccPanel(el, accIdNr):
                 # is only allowed within panel body (ID 9 in schema)
                 msg = 'Unexpected element'
                 if panelId is not None:
-                    msg += ' (in ' + str(panelId) + ')'
-                msg += ': ' + elem.tag + '.' + elemClass
+                    msg += ' (in {0})'.format(panelId)
+                msg += ': {0}.{1}'.format(elem.tag, elemClass)
                 print(msg)
-                # print(etree.tostring(elem).decode('utf-8'))
 
     if i != len(schema):
         print('Error in panel ' + str(el) + ' (missing ' + str(waitingFor) + ')')
