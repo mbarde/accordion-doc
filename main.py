@@ -3,6 +3,7 @@ from lxml import etree
 
 def checkAccPanel(el, accIdNr):
     panelId = None
+    panelIdNr = None
 
     schema = [
         {
@@ -85,7 +86,7 @@ def checkAccPanel(el, accIdNr):
         if action == 'start':
 
             # validate attributes of panel-heading
-            # (populates panlIdNr)
+            # (populates panelId & panelIdNr)
             if elem.tag == 'div' and elemClass == 'panel-heading':
                 panelId = elem.get('id', None)
                 if panelId is None:
@@ -100,7 +101,6 @@ def checkAccPanel(el, accIdNr):
                     return
 
             # validate attributes of accordion-toggle link
-            # (populates bodyIdNr)
             if elem.tag == 'a' and 'accordion-toggle' in elemClass:
                 href = elem.get('href', None)
                 expected = '#{0}-{1}-body'.format(accIdNr, panelIdNr)
