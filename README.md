@@ -1,6 +1,6 @@
 ## Accordion Doc
 
-Python script to validate HTML structure of bootstrap collapse (aka. accordion).
+Python script to validate HTML structure of [Bootstrap collapse](https://getbootstrap.com/docs/4.3/components/collapse/) (aka. accordion).
 
 Developed for Bootstrap 3 collapse - dont know if its compatible to current versions.
 
