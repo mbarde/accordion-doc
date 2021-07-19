@@ -1,6 +1,10 @@
 from lxml import etree
 
 
+ignoreUnexpectedElements = False
+repairIfPossible = True
+
+
 def checkAccPanel(el, accIdNr):
     panelId = None
     panelIdNr = None
@@ -105,21 +109,33 @@ def checkAccPanel(el, accIdNr):
                 href = elem.get('href', None)
                 expected = '#{0}-{1}-body'.format(accIdNr, panelIdNr)
                 if href != expected:
-                    print('Faulty href in toggle link of panel ' + panelId)
-                    return
+                    if repairIfPossible is True:
+                        print('🗸 Faulty href in toggle link of panel ' + panelId)
+                        elem.set('href', expected)
+                    else:
+                        print('Faulty href in toggle link of panel ' + panelId)
+                        return
                 dataParent = elem.get('data-parent', None)
                 expected = '#{0}-accordion'.format(accIdNr)
                 if dataParent != expected:
-                    print('Faulty data-parent in toggle link of panel ' + panelId)
-                    return
+                    if repairIfPossible is True:
+                        print('🗸 Faulty data-parent in toggle link of panel ' + panelId)
+                        elem.set('data-parent', expected)
+                    else:
+                        print('Faulty data-parent in toggle link of panel ' + panelId)
+                        return
 
             # validate attributes of panel-collapse
             if elem.tag == 'div' and 'panel-collapse' in elemClass:
                 bodyId = elem.get('id', None)
                 expected = '{0}-{1}-body'.format(accIdNr, panelIdNr)
                 if bodyId != expected:
-                    print('Faulty body id in panel ' + panelId)
-                    return
+                    if repairIfPossible is True:
+                        print('🗸 Faulty body id in panel ' + panelId)
+                        elem.set('id', expected)
+                    else:
+                        print('Faulty body id in panel ' + panelId)
+                        return
 
         if elem.tag == waitingFor['tag'] and \
            action == waitingFor['action']:
@@ -134,12 +150,12 @@ def checkAccPanel(el, accIdNr):
 
         else:
             # found unexpected element (not in schema):
-            if i != 9:
+            if ignoreUnexpectedElements is False and i != 9:
                 # is only allowed within panel body (ID 9 in schema)
                 msg = 'Unexpected element'
                 if panelId is not None:
                     msg += ' (in {0})'.format(panelId)
-                msg += ': {0}.{1}'.format(elem.tag, elemClass)
+                msg += ': {0}.{1} - expected {2}'.format(elem.tag, elemClass, waitingFor)
                 print(msg)
 
     if i != len(schema):
@@ -160,9 +176,16 @@ def checkAccordion(el):
         checkAccPanel(panel, accIdNr)
 
 
-parser = etree.HTMLParser()
-tree = etree.parse('test.html', parser)
+parser = etree.HTMLParser(encoding='UTF-8')
+tree = etree.parse('acc.html', parser)
 
 accordions = tree.xpath('.//div[contains(@class, "panel-group")]')
 for accordion in accordions:
     checkAccordion(accordion)
+
+if repairIfPossible is True:
+    with open('corrected.html', 'wb') as f:
+        body = tree.xpath('//body')[0]
+        bstr = etree.tostring(body, encoding='UTF-8')
+        f.write(bstr[6:-7])
+        # tree.write(f)
